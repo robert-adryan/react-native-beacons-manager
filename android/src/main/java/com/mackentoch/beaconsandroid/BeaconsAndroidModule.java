@@ -47,14 +47,18 @@ public class BeaconsAndroidModule extends ReactContextBaseJavaModule implements 
     super(reactContext);
     Log.d(LOG_TAG, "BeaconsAndroidModule - started");
     this.mReactContext = reactContext;
-    this.mApplicationContext = reactContext.getApplicationContext();
-    this.mBeaconManager = BeaconManager.getInstanceForApplication(mApplicationContext);
-    // need to bind at instantiation so that service loads (to test more)
-    mBeaconManager.getBeaconParsers().add(new BeaconParser().setBeaconLayout("m:0-3=4c000215,i:4-19,i:20-21,i:22-23,p:24-24"));
-    bindManager();
   }
 
-  @Override
+    @Override
+    public void initialize() {
+        this.mApplicationContext = this.mReactContext.getApplicationContext();
+        this.mBeaconManager = BeaconManager.getInstanceForApplication(mApplicationContext);
+        // need to bind at instantiation so that service loads (to test more)
+        mBeaconManager.getBeaconParsers().add(new BeaconParser().setBeaconLayout("m:0-3=4c000215,i:4-19,i:20-21,i:22-23,p:24-24"));
+        bindManager();
+    }
+
+    @Override
   public String getName() {
       return LOG_TAG;
   }
@@ -402,9 +406,11 @@ public class BeaconsAndroidModule extends ReactContextBaseJavaModule implements 
    * Utils
    **********************************************************************************************/
   private void sendEvent(ReactContext reactContext, String eventName, @Nullable WritableMap params) {
-      reactContext
-              .getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class)
-              .emit(eventName, params);
+      if (reactContext.hasActiveCatalystInstance()) {
+        reactContext
+                .getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class)
+                .emit(eventName, params);
+      }
   }
 
   private Region createRegion(String regionId, String beaconUuid) {
